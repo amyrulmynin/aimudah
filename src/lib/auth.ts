@@ -11,6 +11,8 @@ export const authOptions: NextAuthOptions = {
         params: {
           scope: "openid email profile",
           response_type: "code",
+          prompt: "consent",
+          access_type: "offline",
         },
       },
       token: "https://oauth2.googleapis.com/token",
@@ -38,6 +40,7 @@ export const authOptions: NextAuthOptions = {
   },
   session: {
     strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   pages: {
     signIn: "/login",
@@ -49,7 +52,7 @@ export const authOptions: NextAuthOptions = {
         httpOnly: true,
         sameSite: "lax",
         path: "/",
-        secure: false,
+        secure: true,
       },
     },
     callbackUrl: {
@@ -58,7 +61,7 @@ export const authOptions: NextAuthOptions = {
         httpOnly: true,
         sameSite: "lax",
         path: "/",
-        secure: false,
+        secure: true,
       },
     },
     sessionToken: {
@@ -67,7 +70,8 @@ export const authOptions: NextAuthOptions = {
         httpOnly: true,
         sameSite: "lax",
         path: "/",
-        secure: false,
+        secure: true,
+        maxAge: 30 * 24 * 60 * 60, // 30 days
       },
     },
   },

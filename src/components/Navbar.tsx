@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { data: session } = useSession();
 
   return (
     <nav className="fixed top-0 w-full bg-white/80 backdrop-blur-md border-b border-gray-100 z-50">
@@ -30,12 +32,21 @@ export default function Navbar() {
             >
               Docs
             </Link>
-            <Link
-              href="/login"
-              className="bg-primary-600 text-white px-5 py-2 rounded-lg hover:bg-primary-700 transition font-medium"
-            >
-              Log Masuk
-            </Link>
+            {session ? (
+              <Link
+                href="/dashboard"
+                className="bg-primary-600 text-white px-5 py-2 rounded-lg hover:bg-primary-700 transition font-medium"
+              >
+                Dashboard
+              </Link>
+            ) : (
+              <Link
+                href="/login"
+                className="bg-primary-600 text-white px-5 py-2 rounded-lg hover:bg-primary-700 transition font-medium"
+              >
+                Log Masuk
+              </Link>
+            )}
           </div>
 
           <button
@@ -59,9 +70,15 @@ export default function Navbar() {
             <a href="#pricing" className="block text-gray-600 hover:text-primary-600">Harga</a>
             <a href="#how-it-works" className="block text-gray-600 hover:text-primary-600">Cara Guna</a>
             <Link href="/docs" className="block text-gray-600 hover:text-primary-600">Docs</Link>
-            <Link href="/login" className="block bg-primary-600 text-white px-5 py-2 rounded-lg text-center font-medium">
-              Log Masuk
-            </Link>
+            {session ? (
+              <Link href="/dashboard" className="block bg-primary-600 text-white px-5 py-2 rounded-lg text-center font-medium">
+                Dashboard
+              </Link>
+            ) : (
+              <Link href="/login" className="block bg-primary-600 text-white px-5 py-2 rounded-lg text-center font-medium">
+                Log Masuk
+              </Link>
+            )}
           </div>
         )}
       </div>
