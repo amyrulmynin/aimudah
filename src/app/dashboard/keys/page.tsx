@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface ApiKeyItem {
   id: string;
@@ -15,6 +15,16 @@ export default function KeysPage() {
   const [newKeyName, setNewKeyName] = useState("");
   const [showNewKey, setShowNewKey] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Load existing keys on mount
+  useEffect(() => {
+    fetch("/api/keys")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.keys) setKeys(data.keys);
+      })
+      .catch(console.error);
+  }, []);
 
   const generateKey = async () => {
     if (!newKeyName.trim()) return;

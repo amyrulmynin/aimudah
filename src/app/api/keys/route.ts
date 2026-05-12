@@ -1,9 +1,40 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomBytes, createHash } from "crypto";
+import { promises as fs } from "fs";
+import path from "path";
 
-// TODO: Replace with Prisma when deployed
-// For now, in-memory store for development
-const keys: Map<string, { id: string; userId: string; name: string; prefix: string; hash: string; createdAt: string }> = new Map();
+const KEYS_FILE = path.join(process.cwd(), "data", "keys.json");
+
+interface StoredKey {
+  id: string;
+  userId: string;
+  name: string;
+  prefix: string;
+  hash: string;
+  createdAt: string;
+  lastUsed: string | null;
+}
+
+async function ensureDataDir() {
+  const dir = path.dirname(KEYS_FILE);
+  try {
+    await fs.mkdir(dir, { recursive: true });
+  } catch {}
+}
+
+async function readKeys(): Promise<StoredKey[]> {
+  try {
+    const data = await fs.readFile(KEYS_FILE, "utf-8");
+    return JSON.parse(data);
+  } catch {
+    return [];
+  }
+}
+
+async function writeKeys(keys: StoredKey[]) {
+  await ensureDataDir();
+  await fs.writeFile(KEYS_FILE, JSON.stringify(keys, null, 2));
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -16,14 +47,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Generate key
-    const raw = randomBytes(32).toString("hex");
-    const key = `sk-aimudah-${raw}`;
-    const prefix = `sk-aimudah-${raw.slice(0, 8)}`;
+    // Generate key with aimudah-22dex- prefix
+    const raw = randomBytes(24).toString("hex");
+    const key = `aimudah-22dex-${raw}`;
+    const prefix = `aimudah-22dex-${raw.slice(0, 8)}`;
     const hash = createHash("sha256").update(key).digest("hex");
     const id = randomBytes(12).toString("hex");
 
-    const apiKey = {
+    const apiKey: StoredKey = {
       id,
       userId: "dev-user", // TODO: get from session
       name,
@@ -33,7 +64,9 @@ export async function POST(req: NextRequest) {
       lastUsed: null,
     };
 
-    keys.set(id, apiKey);
+    const keys = await readKeys();
+    keys.push(apiKey);
+    await writeKeys(keys);
 
     return NextResponse.json({
       key, // Only returned once
@@ -45,22 +78,25 @@ export async function POST(req: NextRequest) {
         lastUsed: apiKey.lastUsed,
       },
     });
-  } catch {
+  } catch (err: any) {
     return NextResponse.json(
-      { error: "Ralat dalaman." },
+      { error: `Ralat dalaman: ${err.message}` },
       { status: 500 }
     );
   }
 }
 
 export async function GET() {
-  const allKeys = Array.from(keys.values()).map((k) => ({
-    id: k.id,
-    name: k.name,
-    prefix: k.prefix,
-    createdAt: k.createdAt,
-    lastUsed: null,
-  }));
+  const keys = await readKeys();
+  const allKeys = keys
+    .filter((k) => !(k as any).revoked)
+    .map((k) => ({
+      id: k.id,
+      name: k.name,
+      prefix: k.prefix,
+      createdAt: k.createdAt,
+      lastUsed: k.lastUsed,
+    }));
 
   return NextResponse.json({ keys: allKeys });
 }
