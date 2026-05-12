@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { randomBytes, createHash } from "crypto";
 import { promises as fs } from "fs";
 import path from "path";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 const KEYS_FILE = path.join(process.cwd(), "data", "keys.json");
 
@@ -38,6 +40,15 @@ async function writeKeys(keys: StoredKey[]) {
 
 export async function POST(req: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return NextResponse.json(
+        { error: "Sila log masuk terlebih dahulu." },
+        { status: 401 }
+      );
+    }
+
+    const userId = (session.user as any).id || session.user.email;
     const { name } = await req.json();
 
     if (!name || typeof name !== "string") {
@@ -56,7 +67,7 @@ export async function POST(req: NextRequest) {
 
     const apiKey: StoredKey = {
       id,
-      userId: "dev-user", // TODO: get from session
+      userId,
       name,
       prefix,
       hash,
@@ -86,10 +97,19 @@ export async function POST(req: NextRequest) {
   }
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) {
+    return NextResponse.json(
+      { error: "Sila log masuk terlebih dahulu." },
+      { status: 401 }
+    );
+  }
+
+  const userId = (session.user as any).id || session.user.email;
   const keys = await readKeys();
-  const allKeys = keys
-    .filter((k) => !(k as any).revoked)
+  const userKeys = keys
+    .filter((k) => k.userId === userId && !(k as any).revoked)
     .map((k) => ({
       id: k.id,
       name: k.name,
@@ -98,5 +118,5 @@ export async function GET() {
       lastUsed: k.lastUsed,
     }));
 
-  return NextResponse.json({ keys: allKeys });
+  return NextResponse.json({ keys: userKeys });
 }

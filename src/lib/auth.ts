@@ -11,8 +11,7 @@ export const authOptions: NextAuthOptions = {
         params: {
           scope: "openid email profile",
           response_type: "code",
-          prompt: "consent",
-          access_type: "offline",
+          prompt: "select_account",
         },
       },
       token: "https://oauth2.googleapis.com/token",
