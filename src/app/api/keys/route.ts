@@ -87,6 +87,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET() {
+  const buildVersion = "v2-8d4cfc3";
   const keys = await readKeys();
   const allKeys = keys
     .filter((k) => !(k as any).revoked)
@@ -98,5 +99,5 @@ export async function GET() {
       lastUsed: k.lastUsed,
     }));
 
-  return NextResponse.json({ keys: allKeys });
+  return NextResponse.json({ keys: allKeys, buildVersion });
 }
