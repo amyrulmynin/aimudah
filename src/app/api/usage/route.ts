@@ -1,29 +1,53 @@
 import { NextResponse } from "next/server";
-import { readUsage, getUsageStats } from "@/lib/usage";
+import { promises as fs } from "fs";
+import path from "path";
 
-export const dynamic = "force-dynamic";
+const USAGE_FILE = path.join(process.cwd(), "data", "usage.json");
+
+interface UsageEntry {
+  id: string;
+  model: string;
+  inputTokens: number;
+  outputTokens: number;
+  totalTokens: number;
+  status: number;
+  latencyMs: number;
+  createdAt: string;
+}
+
+async function readUsageFile(): Promise<UsageEntry[]> {
+  try {
+    const data = await fs.readFile(USAGE_FILE, "utf-8");
+    return JSON.parse(data);
+  } catch {
+    return [];
+  }
+}
 
 export async function GET() {
-  try {
-    const entries = await readUsage();
-    const stats = getUsageStats(entries);
+  const entries = await readUsageFile();
 
-    const recent = entries
-      .slice(-50)
-      .reverse()
-      .map((e) => ({
-        id: e.id,
-        model: e.model,
-        inputTokens: e.inputTokens,
-        outputTokens: e.outputTokens,
-        totalTokens: e.totalTokens,
-        status: e.status,
-        latencyMs: e.latencyMs,
-        createdAt: e.createdAt,
-      }));
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
-    return NextResponse.json({ stats, recent });
-  } catch (err: any) {
-    return NextResponse.json({ stats: { today: { requests: 0, tokens: 0 }, month: { requests: 0, tokens: 0 }, total: { requests: 0, tokens: 0 }, modelUsage: {} }, recent: [] });
+  const today = entries.filter((e) => e.createdAt >= todayStart);
+  const thisMonth = entries.filter((e) => e.createdAt >= monthStart);
+
+  const modelUsage: Record<string, { count: number; tokens: number }> = {};
+  for (const e of thisMonth) {
+    if (!modelUsage[e.model]) modelUsage[e.model] = { count: 0, tokens: 0 };
+    modelUsage[e.model].count++;
+    modelUsage[e.model].tokens += e.totalTokens;
   }
+
+  const stats = {
+    today: { requests: today.length, tokens: today.reduce((s, e) => s + e.totalTokens, 0) },
+    month: { requests: thisMonth.length, tokens: thisMonth.reduce((s, e) => s + e.totalTokens, 0) },
+    total: { requests: entries.length, tokens: entries.reduce((s, e) => s + e.totalTokens, 0) },
+    modelUsage,
+  };
+
+  const recent = entries.slice(-50).reverse();
+  return NextResponse.json({ stats, recent });
 }
