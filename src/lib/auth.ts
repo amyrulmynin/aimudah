@@ -72,5 +72,4 @@ export const authOptions: NextAuthOptions = {
     },
   },
   trustHost: true,
-  debug: true,
 };
