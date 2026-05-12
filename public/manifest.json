@@ -1,0 +1,9 @@
+{
+  "name": "AIMudah",
+  "short_name": "AIMudah",
+  "description": "AI API Proxy Murah untuk Developer Malaysia",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb"
+}
