@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { logUsage } from "@/lib/usage";
 
 const UPSTREAM_URL = "https://app.minie.qzz.io/v1/chat/completions";
 const UPSTREAM_KEY = process.env.UPSTREAM_API_KEY || "sk-0bbe287d2db7e3ae-enhj77-bd1214f8";
@@ -29,6 +30,8 @@ function getApiKeyFromHeader(req: NextRequest): string | null {
 }
 
 export async function POST(req: NextRequest) {
+  const startTime = Date.now();
+
   // 1. Validate API key
   const apiKey = getApiKeyFromHeader(req);
   if (!apiKey || !apiKey.startsWith("aimudah-") || apiKey.length !== 30) {
@@ -38,7 +41,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // TODO: Validate key against database, check user plan, rate limit
+  const apiKeyPrefix = apiKey.slice(0, 16);
 
   // 2. Parse request body
   let body: any;
@@ -87,6 +90,20 @@ export async function POST(req: NextRequest) {
 
     if (!upstreamRes.ok) {
       const errText = await upstreamRes.text();
+      const latencyMs = Date.now() - startTime;
+
+      // Log failed request
+      logUsage({
+        userId: "unknown",
+        apiKeyPrefix,
+        model,
+        inputTokens: 0,
+        outputTokens: 0,
+        totalTokens: 0,
+        status: upstreamRes.status,
+        latencyMs,
+      }).catch(() => {});
+
       return NextResponse.json(
         { error: { message: `Upstream error: ${upstreamRes.status}`, type: "upstream_error", details: errText } },
         { status: upstreamRes.status }
@@ -103,6 +120,19 @@ export async function POST(req: NextRequest) {
         );
       }
 
+      // Log streaming request (tokens unknown until done)
+      const latencyMs = Date.now() - startTime;
+      logUsage({
+        userId: "unknown",
+        apiKeyPrefix,
+        model,
+        inputTokens: 0,
+        outputTokens: 0,
+        totalTokens: 0,
+        status: 200,
+        latencyMs,
+      }).catch(() => {});
+
       return new Response(responseStream, {
         headers: {
           "Content-Type": "text/event-stream",
@@ -112,10 +142,37 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 6. Non-streaming — pass through
+    // 6. Non-streaming — pass through and log
     const data = await upstreamRes.json();
+    const latencyMs = Date.now() - startTime;
+
+    // Log usage
+    logUsage({
+      userId: "unknown",
+      apiKeyPrefix,
+      model,
+      inputTokens: data.usage?.prompt_tokens || 0,
+      outputTokens: data.usage?.completion_tokens || 0,
+      totalTokens: data.usage?.total_tokens || 0,
+      status: 200,
+      latencyMs,
+    }).catch(() => {});
+
     return NextResponse.json(data);
   } catch (err: any) {
+    const latencyMs = Date.now() - startTime;
+
+    logUsage({
+      userId: "unknown",
+      apiKeyPrefix,
+      model,
+      inputTokens: 0,
+      outputTokens: 0,
+      totalTokens: 0,
+      status: 500,
+      latencyMs,
+    }).catch(() => {});
+
     return NextResponse.json(
       { error: { message: `Ralat dalaman: ${err.message}`, type: "server_error" } },
       { status: 500 }
