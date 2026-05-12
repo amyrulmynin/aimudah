@@ -1,5 +1,7 @@
 "use client";
 
+import { signIn } from "next-auth/react";
+
 export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
@@ -9,8 +11,8 @@ export default function LoginPage() {
           Masuk untuk dapatkan API key dan mula guna AI premium.
         </p>
 
-        <a
-          href="/api/auth/signin/google?callbackUrl=%2Fdashboard"
+        <button
+          onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
           className="w-full flex items-center justify-center gap-3 bg-white border-2 border-gray-200 rounded-xl px-6 py-4 text-gray-700 font-medium hover:border-primary-300 hover:shadow-md transition"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -32,7 +34,7 @@ export default function LoginPage() {
             />
           </svg>
           Log Masuk dengan Google
-        </a>
+        </button>
 
         <p className="mt-6 text-sm text-gray-500">
           Dengan log masuk, anda bersetuju dengan{" "}
