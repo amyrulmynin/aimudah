@@ -47,10 +47,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Generate key with aimudah-22dex- prefix
-    const raw = randomBytes(24).toString("hex");
-    const key = `aimudah-22dex-${raw}`;
-    const prefix = `aimudah-22dex-${raw.slice(0, 8)}`;
+    // Generate key: aimudah- + 22 hex characters
+    const raw = randomBytes(11).toString("hex"); // 11 bytes = 22 hex chars
+    const key = `aimudah-${raw}`;
+    const prefix = `aimudah-${raw.slice(0, 8)}`;
     const hash = createHash("sha256").update(key).digest("hex");
     const id = randomBytes(12).toString("hex");
 

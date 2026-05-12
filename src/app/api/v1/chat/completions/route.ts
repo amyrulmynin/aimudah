@@ -31,7 +31,7 @@ function getApiKeyFromHeader(req: NextRequest): string | null {
 export async function POST(req: NextRequest) {
   // 1. Validate API key
   const apiKey = getApiKeyFromHeader(req);
-  if (!apiKey || !apiKey.startsWith("aimudah-22dex-")) {
+  if (!apiKey || !apiKey.startsWith("aimudah-") || apiKey.length !== 30) {
     return NextResponse.json(
       { error: { message: "API key tidak sah.", type: "invalid_api_key" } },
       { status: 401 }
