@@ -2,8 +2,8 @@ export default function Hero() {
   return (
     <section className="pt-32 pb-20 px-4 bg-gradient-to-br from-primary-50 via-white to-blue-50">
       <div className="max-w-7xl mx-auto text-center">
-        <div className="inline-block bg-green-100 text-green-700 px-4 py-1.5 rounded-full text-sm font-medium mb-6">
-          1 Billion Token Percuma — Terhad!
+        <div className="inline-block bg-blue-100 text-blue-700 px-4 py-1.5 rounded-full text-sm font-medium mb-6">
+          13 Model AI Premium — Satu API Key
         </div>
 
         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight mb-6">
@@ -13,9 +13,9 @@ export default function Hero() {
         </h1>
 
         <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto mb-8">
-          Akses Claude, GPT-5, Gemini dan 10+ model AI lain dengan satu API key.
+          Akses Claude, DeepSeek, Qwen dan 13 model AI lain dengan satu API key.
           Drop-in replacement untuk OpenAI — tukar URL, terus guna.
-          Bermula dari <strong>RM0</strong>.
+          Bermula dari <strong>RM13/bulan</strong>.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -23,7 +23,7 @@ export default function Hero() {
             href="/login"
             className="bg-primary-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-primary-700 transition shadow-lg shadow-primary-200"
           >
-            Klaim Token Percuma
+            Mula Sekarang
           </a>
           <a
             href="#pricing"
@@ -42,9 +42,9 @@ export default function Hero() {
           </div>
           <pre className="text-sm text-green-400 overflow-x-auto">
 {`{
-  "apiKey": "sk-aimudah-xxxxx",
+  "apiKey": "aimudah-xxxxxxxxxxxxxxxxxxxx",
   "baseUrl": "https://aimudah.my.id/api/v1",
-  "model": "claude-sonnet-4.5"
+  "model": "aimudah/claude-sonnet-4.5"
 }`}
           </pre>
         </div>

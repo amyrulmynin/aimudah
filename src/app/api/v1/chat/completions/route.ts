@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logUsage } from "@/lib/usage";
+import { createHash } from "crypto";
+import { promises as fs } from "fs";
+import path from "path";
 
 const UPSTREAM_URL = "https://app.minie.qzz.io/v1/chat/completions";
 const UPSTREAM_KEY = process.env.UPSTREAM_API_KEY || "sk-0bbe287d2db7e3ae-enhj77-bd1214f8";
+const KEYS_FILE = path.join(process.cwd(), "data", "keys.json");
 
 // Model mapping: aimudah/ → ma/
 const MODELS: Record<string, string> = {
@@ -21,6 +25,17 @@ const MODELS: Record<string, string> = {
   "aimudah/qwen3-coder-next": "ma/qwen3-coder-next",
 };
 
+async function validateApiKey(key: string): Promise<{ valid: boolean; userId?: string }> {
+  try {
+    const data = await fs.readFile(KEYS_FILE, "utf-8");
+    const keys = JSON.parse(data);
+    const hash = createHash("sha256").update(key).digest("hex");
+    const found = keys.find((k: any) => k.hash === hash && !k.revoked);
+    if (found) return { valid: true, userId: found.userId };
+  } catch {}
+  return { valid: false };
+}
+
 function getApiKeyFromHeader(req: NextRequest): string | null {
   const auth = req.headers.get("authorization");
   if (auth?.startsWith("Bearer ")) {
@@ -32,11 +47,20 @@ function getApiKeyFromHeader(req: NextRequest): string | null {
 export async function POST(req: NextRequest) {
   const startTime = Date.now();
 
-  // 1. Validate API key
+  // 1. Validate API key format
   const apiKey = getApiKeyFromHeader(req);
   if (!apiKey || !apiKey.startsWith("aimudah-") || apiKey.length !== 30) {
     return NextResponse.json(
       { error: { message: "API key tidak sah.", type: "invalid_api_key" } },
+      { status: 401 }
+    );
+  }
+
+  // 2. Verify key exists in storage
+  const { valid, userId } = await validateApiKey(apiKey);
+  if (!valid) {
+    return NextResponse.json(
+      { error: { message: "API key tidak dijumpai atau telah dibatalkan.", type: "invalid_api_key" } },
       { status: 401 }
     );
   }
@@ -94,7 +118,7 @@ export async function POST(req: NextRequest) {
 
       // Log failed request
       logUsage({
-        userId: "unknown",
+        userId: userId || "unknown",
         apiKeyPrefix,
         model,
         inputTokens: 0,
@@ -120,10 +144,9 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      // Log streaming request (tokens unknown until done)
       const latencyMs = Date.now() - startTime;
       logUsage({
-        userId: "unknown",
+        userId: userId || "unknown",
         apiKeyPrefix,
         model,
         inputTokens: 0,
@@ -146,9 +169,8 @@ export async function POST(req: NextRequest) {
     const data = await upstreamRes.json();
     const latencyMs = Date.now() - startTime;
 
-    // Log usage
     logUsage({
-      userId: "unknown",
+      userId: userId || "unknown",
       apiKeyPrefix,
       model,
       inputTokens: data.usage?.prompt_tokens || 0,
@@ -163,7 +185,7 @@ export async function POST(req: NextRequest) {
     const latencyMs = Date.now() - startTime;
 
     logUsage({
-      userId: "unknown",
+      userId: userId || "unknown",
       apiKeyPrefix,
       model,
       inputTokens: 0,

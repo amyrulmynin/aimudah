@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { redirect } from "next/navigation";
+import { useEffect, useState } from "react";
 
 const navItems = [
   { href: "/dashboard", label: "Gambaran" },
@@ -19,8 +20,27 @@ export default function DashboardLayout({
 }) {
   const { data: session, status } = useSession();
   const pathname = usePathname();
+  const [checking, setChecking] = useState(true);
+  const [hasAccess, setHasAccess] = useState(false);
 
-  if (status === "loading") {
+  useEffect(() => {
+    if (status === "authenticated" && session?.user?.email) {
+      fetch("/api/subscription")
+        .then((r) => r.json())
+        .then((d) => {
+          setHasAccess(d.active);
+          setChecking(false);
+          if (!d.active) {
+            window.location.href = "/payment";
+          }
+        })
+        .catch(() => setChecking(false));
+    } else if (status === "unauthenticated") {
+      setChecking(false);
+    }
+  }, [status, session]);
+
+  if (status === "loading" || checking) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full"></div>
@@ -30,6 +50,10 @@ export default function DashboardLayout({
 
   if (!session) {
     redirect("/login");
+  }
+
+  if (!hasAccess) {
+    return null;
   }
 
   return (

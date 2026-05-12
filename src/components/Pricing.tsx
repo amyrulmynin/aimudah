@@ -3,91 +3,81 @@
 import { useState } from "react";
 
 export default function Pricing() {
-  const [tab, setTab] = useState<"bulanan" | "harian">("bulanan");
+  const [tab, setTab] = useState<"pro" | "promax">("pro");
 
-  const bulanan = [
+  const pro = [
     {
-      name: "PERCUMA",
-      price: "RM0",
-      period: "/bulan",
-      features: [
-        "100 request/hari",
-        "6 req/minit",
-        "1 concurrent",
-        "Model percuma sahaja",
-      ],
-      cta: "Mula Percuma",
-      highlight: false,
+      id: "PRO_1D_200M",
+      duration: "1 Hari",
+      price: "RM10",
+      tokens: "200M tokens",
+      reset: "No daily reset",
+      rpm: "30 RPM",
     },
     {
-      name: "PRO",
-      price: "RM13",
-      period: "/bulan",
-      features: [
-        "500 request/hari",
-        "30 req/minit",
-        "2 concurrent",
-        "Semua model PRO",
-      ],
-      cta: "Langgan PRO",
+      id: "PRO_3D_200M",
+      duration: "3 Hari",
+      price: "RM15",
+      tokens: "200M tokens",
+      reset: "No daily reset",
+      rpm: "30 RPM",
+    },
+    {
+      id: "PRO_7D_50M",
+      duration: "7 Hari",
+      price: "RM25",
+      tokens: "50M tokens / hari",
+      reset: "Daily reset (00:00 MYT)",
+      rpm: "30 RPM",
+    },
+    {
+      id: "PRO_7D_100M",
+      duration: "7 Hari",
+      price: "RM35",
+      tokens: "100M tokens / hari",
+      reset: "Daily reset (00:00 MYT)",
+      rpm: "30 RPM",
       highlight: true,
     },
     {
-      name: "PREMIUM",
-      price: "RM26",
-      period: "/bulan",
-      features: [
-        "2,000 request/hari",
-        "60 req/minit",
-        "4 concurrent",
-        "Semua model PRO",
-      ],
-      cta: "Langgan Premium",
-      highlight: false,
-    },
-    {
-      name: "SULTAN",
-      price: "RM45",
-      period: "/bulan",
-      features: [
-        "Unlimited request",
-        "90 req/minit",
-        "10 concurrent",
-        "Semua model termasuk GPT-5.5",
-      ],
-      cta: "Langgan Sultan",
-      highlight: false,
+      id: "PRO_7D_200M",
+      duration: "7 Hari",
+      price: "RM50",
+      tokens: "200M tokens / hari",
+      reset: "Daily reset (00:00 MYT)",
+      rpm: "30 RPM",
     },
   ];
 
-  const harian = [
+  const promax = [
     {
-      name: "Harian Biasa",
+      id: "PROMAX_1D_200M",
+      duration: "1 Hari",
       price: "RM13",
-      period: "/hari",
-      features: ["75M token", "60 req/minit", "Semua model PRO"],
-      cta: "Beli Harian",
-      highlight: false,
+      tokens: "200M tokens",
+      reset: "No daily reset",
+      rpm: "30 RPM",
     },
     {
-      name: "Harian Kenyang",
-      price: "RM22",
-      period: "/hari",
-      features: ["250M token", "90 req/minit", "Semua model PRO"],
-      cta: "Beli Kenyang",
+      id: "PROMAX_7D_150M",
+      duration: "7 Hari",
+      price: "RM18",
+      tokens: "150M tokens",
+      reset: "No daily reset",
+      rpm: "30 RPM",
+    },
+    {
+      id: "PROMAX_7D_30M",
+      duration: "7 Hari",
+      price: "RM25",
+      tokens: "30M tokens / hari",
+      reset: "Daily reset (01:00 MYT)",
+      rpm: "30 RPM",
       highlight: true,
     },
-    {
-      name: "Harian Sultan",
-      price: "RM45",
-      period: "/hari",
-      features: ["500M token", "90 req/minit", "Semua model termasuk GPT-5.5"],
-      cta: "Beli Sultan",
-      highlight: false,
-    },
   ];
 
-  const plans = tab === "bulanan" ? bulanan : harian;
+  const plans = tab === "pro" ? pro : promax;
 
   return (
     <section id="pricing" className="py-20 px-4 bg-white">
@@ -102,33 +92,33 @@ export default function Pricing() {
         <div className="flex justify-center mb-12">
           <div className="bg-gray-100 rounded-xl p-1 inline-flex">
             <button
-              onClick={() => setTab("bulanan")}
+              onClick={() => setTab("pro")}
               className={`px-6 py-2 rounded-lg font-medium transition ${
-                tab === "bulanan"
+                tab === "pro"
                   ? "bg-white text-primary-600 shadow"
                   : "text-gray-600"
               }`}
             >
-              Bulanan
+              PRO
             </button>
             <button
-              onClick={() => setTab("harian")}
+              onClick={() => setTab("promax")}
               className={`px-6 py-2 rounded-lg font-medium transition ${
-                tab === "harian"
+                tab === "promax"
                   ? "bg-white text-primary-600 shadow"
                   : "text-gray-600"
               }`}
             >
-              Harian
+              PRO MAX
             </button>
           </div>
         </div>
 
-        <div className={`grid gap-6 ${tab === "bulanan" ? "md:grid-cols-4" : "md:grid-cols-3"} max-w-5xl mx-auto`}>
+        <div className={`grid gap-4 ${plans.length > 3 ? "sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5" : "md:grid-cols-3"} max-w-6xl mx-auto`}>
           {plans.map((plan) => (
             <div
-              key={plan.name}
-              className={`rounded-2xl p-6 border-2 ${
+              key={plan.id}
+              className={`rounded-2xl p-5 border-2 ${
                 plan.highlight
                   ? "border-primary-500 shadow-xl shadow-primary-100"
                   : "border-gray-100"
@@ -139,22 +129,31 @@ export default function Pricing() {
                   Popular
                 </div>
               )}
-              <h3 className="text-lg font-bold text-gray-900">{plan.name}</h3>
-              <div className="mt-3 mb-4">
-                <span className="text-3xl font-bold text-gray-900">
-                  {plan.price}
-                </span>
-                <span className="text-gray-500">{plan.period}</span>
+              <div className="text-xs font-medium text-gray-500 uppercase mb-1">
+                {plan.duration}
               </div>
-              <ul className="space-y-2 mb-6">
-                {plan.features.map((f) => (
-                  <li key={f} className="flex items-center gap-2 text-sm text-gray-600">
-                    <svg className="w-4 h-4 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                    {f}
-                  </li>
-                ))}
+              <div className="mb-3">
+                <span className="text-2xl font-bold text-gray-900">{plan.price}</span>
+              </div>
+              <ul className="space-y-2 mb-5 text-sm text-gray-600">
+                <li className="flex items-center gap-2">
+                  <svg className="w-4 h-4 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  {plan.tokens}
+                </li>
+                <li className="flex items-center gap-2">
+                  <svg className="w-4 h-4 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  {plan.reset}
+                </li>
+                <li className="flex items-center gap-2">
+                  <svg className="w-4 h-4 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  {plan.rpm}
+                </li>
               </ul>
               <a
                 href="/login"
@@ -164,14 +163,14 @@ export default function Pricing() {
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
               >
-                {plan.cta}
+                Beli Sekarang
               </a>
             </div>
           ))}
         </div>
 
         <p className="text-center text-sm text-gray-500 mt-8">
-          Semua harga termasuk SST. Pembayaran melalui FPX, e-wallet, atau bank transfer.
+          Semua harga termasuk SST. Routed through dedicated infrastructure with HA load balancing.
         </p>
       </div>
     </section>
