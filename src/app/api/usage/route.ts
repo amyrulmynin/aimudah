@@ -1,11 +1,16 @@
 import { NextResponse } from "next/server";
 import { promises as fs } from "fs";
 import path from "path";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { isAdmin } from "@/lib/users";
 
 const USAGE_FILE = path.join(process.cwd(), "data", "usage.json");
 
 interface UsageEntry {
   id: string;
+  userId: string;
+  apiKeyPrefix: string;
   model: string;
   inputTokens: number;
   outputTokens: number;
@@ -25,7 +30,19 @@ async function readUsageFile(): Promise<UsageEntry[]> {
 }
 
 export async function GET() {
-  const entries = await readUsageFile();
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.email) {
+    return NextResponse.json({ error: "Sila log masuk." }, { status: 401 });
+  }
+
+  const email = session.user.email;
+  const userId = (session.user as any).id || email;
+  const allEntries = await readUsageFile();
+
+  // Admin sees all, normal user sees own only
+  const entries = isAdmin(email)
+    ? allEntries
+    : allEntries.filter((e) => e.userId === userId || e.userId === email);
 
   const now = new Date();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
